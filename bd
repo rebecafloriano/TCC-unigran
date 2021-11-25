@@ -1,0 +1,22 @@
+- USUÁRIOS
+-- MÉDICOS FAVORITOS
+-- AGENDAMENTOS
+
+
+
+- MÉDICOS
+-- FOTOS
+-- NOTAS
+-- SERVIÇOS
+-- DEPOIMENTOS
+-- DISPONIBILIDADE
+
+- users
+- userfavorties
+- userappoints
+- medicos
+- medicosphotos
+- medicoreviews
+- medicoservices
+- medicotestimonials
+- medicoavailability
