@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 use App\Models\User;
+use App\Models\UserAppointment;
+use App\Models\UserFavorite;
 use App\Models\Doctor;
 use App\Models\DoctorPhotos;
 use App\Models\DoctorServices;
@@ -95,18 +97,162 @@ class DoctorController extends Controller
         return $array;
     }*/
 
-    public function list(Request $request) {
-        $array = ['error' =>''];
+    private function searchGeo($address)
+    {
+        $key = env('MAPS_KEY', null);
 
-        $doctors = Doctor::all();
+        $address = urlencode($address);
 
-        foreach($doctors as $bkey => $bvalue) {
-            $doctors[$bkey]['avatar'] = url('media/avatars/'.$doctors[$bkey]['avatar']);
+        $url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' . $address . '&key=' . $key;
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $res = curl_exec($ch);
+        curl_close($ch);
+
+        return json_decode($res, true);
+    }
+
+    public function list(Request $request)
+    {
+        $array = ['error' => ''];
+
+        $lat = $request->input('lat');
+        $lng = $request->input('lng');
+        $city = $request->input('city');
+        $offset = $request->input('offset');
+        if (!$offset) {
+            $offset = 0;
+        }
+
+        if (!empty($city)) {
+            $res = $this->searchGeo($city);
+
+            if (count($res['results']) > 0) {
+                $lat = $res['results'][0]['geometry']['location']['lat'];
+                $lng = $res['results'][0]['geometry']['location']['lng'];
+            }
+        } elseif (!empty($lat) && !empty($lng)) {
+            $res = $this->searchGeo($lat . ',' . $lng);
+
+            if (count($res['results']) > 0) {
+                $city = $res['results'][0]['formatted_address'];
+            }
+        } else {
+            $lat = '-23.5630907';
+            $lng = '-46.6682795';
+            $city = 'São Paulo';
+        }
+
+
+        $doctors = Doctor::select(Doctor::raw('*, SQRT(
+            POW(69.1 * (latitude - ' . $lat . '), 2) +
+            POW(69.1 * (' . $lng . ' - longitude) * COS(latitude / 57.3), 2)) AS distance'))
+            ->havingRaw('distance < ?', [15])
+            ->orderBy('distance', 'ASC')
+            ->offset($offset)
+            ->limit(5)
+            ->get();
+
+        foreach ($doctors as $bkey => $bvalue) {
+            $doctors[$bkey]['avatar'] = url('media/avatars/' . $doctors[$bkey]['avatar']);
         }
 
         $array['data'] = $doctors;
         $array['loc'] = 'São Paulo';
 
+        return $array;
+    }
+
+    public function one($id)
+    {
+        $array = ['error' => ''];
+
+        $doctor = Doctor::find($id);
+
+        if ($doctor) {
+            $doctor['avatar'] = url('media/avatars/' . $doctor['avatar']);
+            $doctor['favorited'] = false;
+            $doctor['photos'] = [];
+            $doctor['services'] = [];
+            $doctor['testimonials'] = [];
+            $doctor['available'] = [];
+
+            // Verificando FAVORITO
+            $cFavorite = UserFavorite::where('id_user', $this->loggedUser->id)
+                ->where('id_doctor', $doctor->id)
+                ->count();
+            if ($cFavorite > 0) {
+                $doctor['Favorited'] = true;
+            }
+
+            // Pegando as fotos do Médico
+            $doctor['photos'] = DoctorPhotos::select('id', 'url')->where('id_doctor', $doctor->id)->get();
+            foreach ($doctor['photos'] as $bpkey => $bpvalue) {
+                $doctor['photos'][$bpkey]['url'] = url('media/uploads/' . $doctor['photos'][$bpkey]['url']);
+            }
+
+            // Pegando os serviços do Médico
+            $doctor['services'] = DoctorServices::select(['id', 'name', 'price'])->where('id_doctor', $doctor->id)->get();
+
+            // Pegando os depoimentos do Médico
+            $doctor['testimonials'] = DoctorTestimonials::select(['id', 'name', 'rate', 'body'])->where('id_doctor', $doctor->id)->get();
+
+            // Pegando disponilidade do Médico
+            $availability = [];
+
+            // - Pegando a disponibilidade crua
+            $avails = DoctorAvailability::where('id_doctor', $doctor->id)->get();
+            $availWeekdays = [];
+            foreach ($avails as $item) {
+                $availWeekdays[$item['weekday']] = explode(',', $item['hours']);
+            }
+
+            // - Pegar os agendamentos dos próximos 20 dias
+            $appointments = [];
+            $appQuery = UserAppointment::where('id_doctor', $doctor->id)
+                ->whereBetween('ap_datetime', [
+                    date('Y-m-d') . '00:00:00',
+                    date('Y-m-d', strtotime('+20 days')) . '23:59:59'
+                ])
+                ->get();
+            foreach ($appQuery as $appItem) {
+                $appointments[] = $appItem['ap_datetime'];
+            }
+
+            // - Gerar disponibilidade real
+            for ($q = 0; $q < 20; $q++) {
+                $timeItem = strtotime('+' . $q . 'days');
+                $weekday = date('w', $timeItem);
+
+                if (in_array($weekday, array_keys($availWeekdays))) {
+                    $hours = [];
+
+                    $dayItem = date('Y-m-d', $timeItem);
+
+                    foreach ($availWeekdays[$weekday] as $hourItem) {
+                        $dayFormated = $dayItem . ' ' . $hourItem . ':00';
+                        if (!in_array($dayFormated, $appointments)) {
+                            $hours[] = $hourItem;
+                        }
+                    }
+
+                    if (count($hours) > 0) {
+                        $availability[] = [
+                            'date' => $dayItem,
+                            'hours' => $hours
+                        ];
+                    }
+                }
+            }
+
+            $doctor['available'] = $availability;
+
+            $array['data'] = $doctor;
+        } else {
+            $array['error'] = 'Médico não encontrado';
+            return $array;
+        }
         return $array;
     }
 }
