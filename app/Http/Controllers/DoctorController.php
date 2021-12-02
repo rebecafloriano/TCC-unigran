@@ -255,4 +255,123 @@ class DoctorController extends Controller
         }
         return $array;
     }
+
+    public function setAppointment($id,Request $request){
+        // service, yarn, month, day, hour
+        $array = ['error' =>''];
+
+        $service = $request->input('service');
+        $year = intval($request->input('year'));
+        $month = intval($request->input('month'));
+        $day = intval($request->input('day'));
+        $hour = intval($request->input('hour'));
+
+        $month = ($month < 10) ? '0'.$month : $month;
+        $day = ($day < 10) ? '0'.$day : $day;
+        $hour = ($hour < 10) ? '0'.$hour : $hour;
+
+        // 1. verificar se o serviço do médico existe
+        $doctorservice = DoctorServices::select()
+            ->where('id', $service)
+            ->where('id_doctor', $id)
+        ->first();
+
+        if($doctorservice) {
+            // 2. verificar se a data é real
+            $apDate = $year.'-'.$month.'-'.$day.' '.$hour.':00:00';
+            if(strtotime($apDate) > 0){
+                // 3. verificar se o médico já possui agendamento neste dia/hora
+                $apps = UserAppointment::select()
+                    ->where('id_doctor', $id)
+                    ->where('ap_datetime', $apDate)
+                ->count();
+                if($apps === 0){
+                    // 4.1 verificar se o médico atende nesta data
+                    $weekday = date('w', strtotime($apDate));
+                    $avail = DoctorAvailability::select()
+                        ->where('id_doctor', $id)
+                        ->where('weekday', $weekday)
+                    ->first();
+                    if($avail) {
+                        // 4.2 verificar se o médico atende nesta hora
+                        $hours = explode(',', $avail['hours']);
+                        if(in_array($hour.':00', $hours)) {
+                            // 5. fazer o agendamento
+                            $newApp = new UserAppointment();
+                            $newApp->id_user = $this->loggedUser->id;
+                            $newApp->id_doctor = $id;
+                            $newApp->id_service = $service;
+                            $newApp->ap_datetime = $apDate;
+                            $newApp->save();
+                        } else {
+                            $array['error'] = 'Médico não atende nesta hora!';
+                        }
+
+                    } else {
+                        $array['error'] = 'Médico não atende neste dia!';
+                    }
+
+                } else {
+                    $array['error'] = 'Data indisponível!';
+                }
+
+
+            } else {
+                $array['error'] = 'Data inválida!';
+            }
+
+        } else {
+            $array['error'] = 'Serviço inexistente!';
+        }
+
+        return $array;
+    }
+
+    public function search(Request $request) {
+        $array = ['error' =>'', 'list'=>[]];
+
+        $q = $request->input('q');
+
+        if($q) {
+
+            $doctors = Doctor::select()
+                ->where('name', 'LIKE', '%'.$q.'%')
+            ->get();
+            foreach ($doctors as $bkey => $doctor) {
+                $doctors[$bkey]['avatar'] = url('media/avatars/'.$doctors[$bkey]['avatar']);
+            }
+
+            $array['list'] = $doctors;
+
+    } else {
+        $array['error'] = 'Digite o que está buscando!';
+    }
+    return $array;
+}
+
+// buscar médico por especialidade - puxar o nome do id**
+public function searchService(Request $request) {
+    $array = ['error' =>'', 'list'=>[]];
+
+    $q = $request->input('q');
+
+    if($q) {
+
+        $doctors = DoctorServices::select()
+            ->where('name', 'LIKE', '%'.$q.'%')
+        ->get();
+
+        foreach ($doctors as $bkey => $doctor) {
+            $doctors[$bkey]['avatar'] = url('media/avatars/'.$doctors[$bkey]['avatar']);
+            
+        }
+
+        $array['list'] = $doctors;
+
+} else {
+    $array['error'] = 'Digite o que está buscando!';
+}
+return $array;
+}
+
 }

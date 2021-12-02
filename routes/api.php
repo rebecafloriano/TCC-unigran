@@ -23,8 +23,9 @@ Route::post('/user', [AuthController::class, 'create']);
 
 Route::get('/user', [UserController::class, 'read']);
 Route::put('/user', [UserController::class, 'update']);
+Route::post('/user/avatar', [UserController::class, 'updateAvatar']);
 Route::get('/user/favorites', [UserController::class, 'getFavorites']);
-Route::post('/user/favorite', [UserController::class, 'addFavorite']);
+Route::post('/user/favorite', [UserController::class, 'toggleFavorite']);
 Route::get('/user/appointments', [UserController::class, 'getAppointments']);
 
 Route::get('/doctors', [DoctorController::class, 'list']);
@@ -32,5 +33,6 @@ Route::get('/doctor/{id}', [DoctorController::class, 'one']);
 Route::post('/doctor/{id}/appointment', [DoctorController::class, 'setAppointment']);
 
 Route::get('/search', [DoctorController::class, 'search']);
+Route::get('/searchService', [DoctorController::class, 'searchService']);
 
 
