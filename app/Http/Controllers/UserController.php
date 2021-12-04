@@ -14,6 +14,7 @@ use App\Models\UserAppointment;
 use App\Models\DoctorServices;
 use App\Models\User;
 
+
 class UserController extends Controller
 {
     private $loggedUser;
