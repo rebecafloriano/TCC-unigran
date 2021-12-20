@@ -1,10 +1,10 @@
-const BASE_API = 'http://127.0.0.1:8000/api';
+const BASE_API = 'http://10.0.2.2:8000/api';
 
 export default {
     checkToken:async (token) => {
         const req = await fetch(`${BASE_API}/auth/refresh`, {
             method: 'POST',
-            header: { 
+            headers: { 
                 Accept: 'application/json',
                 'Content-Type': 'application/json'
             },
@@ -16,7 +16,7 @@ export default {
     signIn: async (email, password) => {
         const req = await fetch(`${BASE_API}/auth/login`, {
             method: 'POST',
-            header: { 
+            headers: { 
                 Accept: 'application/json',
                 'Content-Type': 'application/json'
             },
@@ -28,7 +28,7 @@ export default {
     signUp: async (name, email, password) => {
         const req = await fetch(`${BASE_API}/user`, {
             method: 'POST',
-            header: { 
+            headers: { 
                 Accept: 'application/json',
                 'Content-Type': 'application/json'
             },
