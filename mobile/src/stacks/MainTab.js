@@ -12,11 +12,11 @@ import Profile from '../screens/Profile';
 const Tab = createBottomTabNavigator();
 
 export default () => (
-    <Tab.Navigator tabBar={props=><CustomTabBar {...props} />}>
-        <Tab.Screen name="Home" component={Home} />
-        <Tab.Screen name="Search" component={Search} />
-        <Tab.Screen name="Appointments" component={Appointments} />
-        <Tab.Screen name="Favorites" component={Favorites} />
-        <Tab.Screen name="Profile" component={Profile} />
+    <Tab.Navigator  tabBar={props=><CustomTabBar {...props} />}>
+        <Tab.Screen options={{ headerShown: false }} name="Home" component={Home} />
+        <Tab.Screen options={{ headerShown: false }} name="Search" component={Search} />
+        <Tab.Screen options={{ headerShown: false }} name="Appointments" component={Appointments} />
+        <Tab.Screen options={{ headerShown: false }} name="Favorites" component={Favorites} />
+        <Tab.Screen options={{ headerShown: false }} name="Profile" component={Profile} />
     </Tab.Navigator>
 );

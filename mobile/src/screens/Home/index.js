@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Platform } from 'react-native';
+import { Platform, RefreshControl } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { request, PERMISSIONS } from 'react-native-permissions';
 import Geolocation from '@react-native-community/geolocation';
@@ -36,6 +36,7 @@ export default () => {
     const [ coords, setCoords ] = useState(null);
     const [ loading, setLoading ] = useState(false);
     const [ list, setList ] = useState([]);
+    const [refreshing, setRefreshing ] = useState(false);
 
     const handleLocationFinder = async () => {
         setCoords(null);
@@ -63,7 +64,14 @@ export default () => {
         setLoading(true);
         setList([]);
 
-        let res = await Api.getDoctors();
+        let lat = null;
+        let lng = null;
+        if(coords) {
+            lat = coords.latitude;
+            lng = coords.longitude;
+        }
+
+        let res = await Api.getDoctors(lat, lng, locationText);
         console.log(res);
         if(res.error == '') {
             if(res.loc) {
@@ -83,9 +91,21 @@ export default () => {
         getDoctors();
     }, []);
 
+    const onRefresh = () => {
+        setRefreshing(false);
+        getDoctors();
+    }
+
+    const handleLocationSearch = () => {
+        setCoords({});
+        getDoctors();
+    }
+
     return (
         <Container>
-            <Scroller>
+            <Scroller refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }>
                 <HeaderArea>
                     <HeaderTitle numberOfLines={2}>Encontre o seu médico favorito</HeaderTitle>
                     <SearchButton onPress={()=>navigation.navigate('Search')}>
@@ -99,6 +119,7 @@ export default () => {
                         placeholderTextColor="#FFFFFF"
                         value={locationText}
                         onChangeText={t=>setLocationText(t)}
+                        onEndEditing={handleLocationSearch}
                     />
                     <LocationFinder onPress={handleLocationFinder}>
                         <MyLocationIcon width="24" height="24" fill="#FFFFFF" />
