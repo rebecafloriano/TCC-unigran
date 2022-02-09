@@ -149,9 +149,9 @@ class DoctorController extends Controller
             POW(69.1 * (latitude - ' . $lat . '), 2) +
             POW(69.1 * (' . $lng . ' - longitude) * COS(latitude / 57.3), 2)) AS distance'))
             ->havingRaw('distance < ?', [15])
-            ->orderBy('distance', 'ASC')
+            ->orderBy('name', 'ASC')
             ->offset($offset)
-            ->limit(5)
+            ->limit(50)
             ->get();
 
         foreach ($doctors as $bkey => $bvalue) {
@@ -363,7 +363,7 @@ public function searchService(Request $request) {
 
         foreach ($doctors as $bkey => $doctor) {
             $doctors[$bkey]['avatar'] = url('media/avatars/'.$doctors[$bkey]['avatar']);
-            
+
         }
 
         $array['list'] = $doctors;
