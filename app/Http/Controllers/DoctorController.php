@@ -25,7 +25,7 @@ class DoctorController extends Controller
         $this->loggedUser = auth()->user();
     }
 
-    /*public function createRandom()
+    public function createRandom()
     {
 
         $array = ['error' => ''];
@@ -95,7 +95,7 @@ class DoctorController extends Controller
             }
         }
         return $array;
-    }*/
+    }
 
     private function searchGeo($address)
     {
@@ -155,7 +155,7 @@ class DoctorController extends Controller
             ->get();
 
         foreach ($doctors as $bkey => $bvalue) {
-            $doctors[$bkey]['avatar'] = url('media/avatars/' . $doctors[$bkey]['avatar']);
+            $doctors[$bkey]['avatar'] = url('media/avatars/'.$doctors[$bkey]['avatar']);
         }
 
         $array['data'] = $doctors;

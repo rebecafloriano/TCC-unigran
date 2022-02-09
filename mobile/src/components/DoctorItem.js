@@ -1,8 +1,13 @@
 import React from 'react';
 import styled from 'styled-components/native';
+<<<<<<< HEAD
 import { useNavigation } from '@react-navigation/native';
 
 import Stars from '../components/Stars';
+=======
+
+import Stars from '../components/Stars'
+>>>>>>> a8c6851fdbebfbd18e84c6057c591e0eda2a2571
 
 const Area = styled.TouchableOpacity`
     background-color: #FFFFFF;
@@ -20,7 +25,11 @@ const Avatar = styled.Image`
 
 const InfoArea = styled.View`
     margin-left: 20px;
+<<<<<<< HEAD
     justify-content: space-between;;
+=======
+    justify-content: space-between;
+>>>>>>> a8c6851fdbebfbd18e84c6057c591e0eda2a2571
 `;
 
 const UserName = styled.Text`
@@ -42,6 +51,7 @@ const SeeProfileButtonText = styled.Text`
     color: #268596;
 `;
 
+<<<<<<< HEAD
 export default ({data}) => {
     const navigation = useNavigation();
 
@@ -56,16 +66,30 @@ export default ({data}) => {
 
     return (
         <Area onPress={handleClick}>
+=======
+
+export default ({data}) => {
+    return (
+        <Area>
+>>>>>>> a8c6851fdbebfbd18e84c6057c591e0eda2a2571
             <Avatar source={{uri: data.avatar}} />
             <InfoArea>
                 <UserName>{data.name}</UserName>
 
                 <Stars stars={data.stars} showNumber={true} />
+<<<<<<< HEAD
 
+=======
+                
+>>>>>>> a8c6851fdbebfbd18e84c6057c591e0eda2a2571
                 <SeeProfileButton>
                     <SeeProfileButtonText>Ver Perfil</SeeProfileButtonText>
                 </SeeProfileButton>
             </InfoArea>
         </Area>
     );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> a8c6851fdbebfbd18e84c6057c591e0eda2a2571

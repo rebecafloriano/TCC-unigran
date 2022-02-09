@@ -39,6 +39,7 @@ export default {
         const json = await req.json();
         return json;
     },
+<<<<<<< HEAD
 
     logout: async () => {
         const token = await AsyncStorage.getItem('token');
@@ -67,6 +68,17 @@ export default {
         const req = await fetch(`${BASE_API}/doctor/${id}?token=${token}`);
         const json = await req.json();
         console.log(json);
+=======
+    getDoctors: async (lat=null, lng=null, address=null) => {
+        const token = await AsyncStorage.getItem('token');
+
+        console.log("LAT", lat);
+        console.log("LNG", lng);
+        console.log("ADDRESS", address);
+
+        const req = await fetch(`${BASE_API}/doctors?token=${token}&lat=${lat}&lng=${lng}&address=${address}`);
+        const json = await req.json();
+>>>>>>> a8c6851fdbebfbd18e84c6057c591e0eda2a2571
         return json;
     }
 
